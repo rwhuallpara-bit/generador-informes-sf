@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Generador de Informes - Seguridad Física SOBOCE</title>
+  <style>
+    :root { --primary: #13501B; --primary-light: #e8f0e9; --bg: #f4f6f5; --border: #cbd5e1; }
+    body { font-family: 'Segoe UI', system-ui, sans-serif; background: var(--bg); margin: 0; padding: 20px; color: #1e293b; }
+    .container { max-width: 780px; margin: auto; background: #fff; padding: 30px; border-radius: 10px; box-shadow: 0 4px 16px rgba(0,0,0,0.08); border-top: 6px solid var(--primary); }
+    h2 { color: var(--primary); margin: 0 0 6px 0; font-size: 1.4rem; }
+    p.subtitle { margin: 0 0 22px 0; color: #64748b; font-size: 0.9rem; }
+    .section-title { background: var(--primary-light); color: var(--primary); padding: 8px 12px; border-left: 4px solid var(--primary); font-weight: 700; font-size: 0.92rem; margin: 22px 0 14px 0; }
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+    .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px; }
+    .form-group { margin-bottom: 14px; }
+    label { display: block; font-weight: 600; margin-bottom: 5px; font-size: 0.85rem; }
+    input, select, textarea { width: 100%; padding: 9px 11px; border: 1px solid var(--border); border-radius: 6px; box-sizing: border-box; font-size: 0.92rem; }
+    input:focus, select:focus, textarea:focus { outline: none; border-color: var(--primary); }
+    .hidden { display: none; }
+    button { width: 100%; padding: 14px; background: var(--primary); color: #fff; border: none; border-radius: 6px; font-size: 1rem; font-weight: bold; cursor: pointer; margin-top: 18px; transition: background 0.2s; }
+    button:hover { background: #0e3d14; }
+    @media (max-width: 600px) { .grid-2, .grid-3 { grid-template-columns: 1fr; } }
+  </style>
+  <!-- Librerías para Word + Imágenes -->
+  <script src="https://unpkg.com/pizzip@3.1.6/dist/pizzip.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/docxtemplater/3.42.0/docxtemplater.js"></script>
+  <script src="https://unpkg.com/docxtemplater-image-module-free@1.1.1/build/imagemodule.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+</head>
+<body>
+
+<div class="container">
+  <h2>Generador Automático de Informes (ART-SFI.SF.017)</h2>
+  <p class="subtitle">Seguridad Física y Patrimonial – Complete los campos para generar el documento oficial.</p>
+
+  <div class="grid-2">
+    <div class="form-group">
+      <label>Tipo de Informe a Generar</label>
+      <select id="tipoInforme" onchange="cambiarFormulario()">
+        <option value="alcoholemia">508 - Resultado Positivo de Alcotest</option>
+        <option value="licencia_falsa">494 - Licencia de Conducir Falsa</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label>N° Correlativo (SF-XXX/2026)</label>
+      <input type="text" id="correlativo" placeholder="Ej. 509" required>
+    </div>
+  </div>
+
+  <form id="informeForm">
+    <div class="section-title">1. Datos de Encabezado</div>
+    <div class="grid-2">
+      <div class="form-group">
+        <label>De (Quien emite el informe)</label>
+        <input type="text" id="remitente" placeholder="Ej. Ruben Rodolfo Huata - Operador de Monitoreo" required>
+      </div>
+      <div class="form-group">
+        <label>Fecha del Informe</label>
+        <input type="date" id="fecha_informe" required>
+      </div>
+    </div>
+    <div class="form-group">
+      <label>Referencia (Ref.)</label>
+      <input type="text" id="referencia" value="INFORME DE RESULTADO POSITIVO DE ALCOTEST – PLANTA READY MIX PORTILLO" required>
+    </div>
+
+    <div class="section-title">2. Datos del Evento e Involucrado</div>
+    <div class="grid-3">
+      <div class="form-group">
+        <label>Fecha del Suceso</label>
+        <input type="date" id="fecha_evento" required>
+      </div>
+      <div class="form-group">
+        <label>Hora (hrs.)</label>
+        <input type="time" id="hora" required>
+      </div>
+      <div class="form-group">
+        <label>Puesto / Lugar de Control</label>
+        <input type="text" id="lugar" placeholder="Ej. Portería Principal / Puesto 1" required>
+      </div>
+    </div>
+
+    <!-- BLOQUE EXCLUSIVO: ALCOTEST -->
+    <div id="bloque-alcoholemia">
+      <div class="grid-2">
+        <div class="form-group">
+          <label>Nombre Completo del Infractor</label>
+          <input type="text" id="nombre" placeholder="Nombres y Apellidos">
+        </div>
+        <div class="form-group">
+          <label>Cédula de Identidad (C.I.)</label>
+          <input type="text" id="ci" placeholder="Ej. 6845123 LP">
+        </div>
+      </div>
+
+      <div class="grid-3">
+        <div class="form-group">
+          <label>Cargo</label>
+          <input type="text" id="cargo" placeholder="Ej. Conductor Mixer">
+        </div>
+        <div class="form-group">
+          <label>Empresa / Contratista</label>
+          <input type="text" id="empresa" placeholder="Ej. Trans. Bolivia">
+        </div>
+        <div class="form-group">
+          <label>Responsable Inmediato SOBOCE</label>
+          <input type="text" id="resp_soboce" placeholder="Nombre Jefe / Supervisor">
+        </div>
+      </div>
+
+      <div class="grid-2">
+        <div class="form-group">
+          <label>Responsable de Control (Guardia/Op.)</label>
+          <input type="text" id="resp_control">
+        </div>
+        <div class="form-group">
+          <label>Registro Firmado (Sí / No)</label>
+          <select id="reg_firmado">
+            <option value="SÍ">SÍ</option>
+            <option value="NO (Se negó a firmar)">NO (Se negó a firmar)</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="grid-3">
+        <div class="form-group">
+          <label>Prueba Pasiva</label>
+          <input type="text" id="prueba_pasiva" placeholder="Ej. POSITIVO / N/A">
+        </div>
+        <div class="form-group">
+          <label>Prueba Automática (mg/L)</label>
+          <input type="text" id="prueba_auto" placeholder="Ej. 0.42 mg/L">
+        </div>
+        <div class="form-group">
+          <label>Prueba Manual</label>
+          <input type="text" id="prueba_manual" value="-">
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label>Aclaraciones</label>
+        <textarea id="aclaraciones" rows="2" placeholder="Detalle del procedimiento o descargo..."></textarea>
+      </div>
+
+      <div class="section-title">3. Equipo Alcoholímetro (ARL-SFI.SF.016)</div>
+      <div class="form-group">
+        <label>Seleccionar Equipo Registrado (Autocompleta Calibración)</label>
+        <select id="selectorEquipo" onchange="cargarDatosEquipo()">
+          <option value="eq1">Dräger Alcotest 6820 - Serie ARKM-0412 (Ready Mix)</option>
+          <option value="eq2">Dräger Alcotest 7510 - Serie ARPN-1108 (Planta Viacha)</option>
+          <option value="manual">-- Ingresar datos manualmente --</option>
+        </select>
+      </div>
+      <div class="grid-3">
+        <div class="form-group"><label>Marca</label><input type="text" id="marca"></div>
+        <div class="form-group"><label>Modelo</label><input type="text" id="modelo"></div>
+        <div class="form-group"><label>N° Serie</label><input type="text" id="serie"></div>
+      </div>
+      <div class="grid-3">
+        <div class="form-group"><label>N° Certificado</label><input type="text" id="certificado"></div>
+        <div class="form-group"><label>Última Calibración</label><input type="text" id="cal_ultima"></div>
+        <div class="form-group"><label>Próxima Calibración</label><input type="text" id="cal_proxima"></div>
+      </div>
+    </div>
+
+    <!-- BLOQUE EXCLUSIVO: LICENCIA FALSA -->
+    <div id="bloque-licencia_falsa" class="hidden">
+      <div class="grid-2">
+        <div class="form-group">
+          <label>Personal de Seguridad que Reporta</label>
+          <input type="text" id="personal_reporta" placeholder="Ej. Sgto. / Agente Juan Pérez">
+        </div>
+        <div class="form-group">
+          <label>Nombre Completo del Conductor</label>
+          <input type="text" id="conductor" placeholder="Nombres y Apellidos">
+        </div>
+      </div>
+      <div class="grid-3">
+        <div class="form-group">
+          <label>N° de Licencia Presentada</label>
+          <input type="text" id="nro_licencia" placeholder="Ej. 4859632">
+        </div>
+        <div class="form-group">
+          <label>Categoría</label>
+          <input type="text" id="categoria" placeholder="Ej. C">
+        </div>
+        <div class="form-group">
+          <label>Sgto. a cargo en EPI Viacha</label>
+          <input type="text" id="sgto_epi" placeholder="Nombre del efectivo policial">
+        </div>
+      </div>
+      <div class="grid-2">
+        <div class="form-group">
+          <label>Nombre en Firma Final</label>
+          <input type="text" id="firma_nombre" value="Jhonatan Blacutt Tapia">
+        </div>
+        <div class="form-group">
+          <label>Cargo en Firma Final</label>
+          <input type="text" id="firma_cargo" value="SEGURIDAD FÍSICA PUESTO 1">
+        </div>
+      </div>
+    </div>
+
+    <div class="section-title">4. Registro Fotográfico (Se incrustan directo en la tabla)</div>
+    <div class="grid-2">
+      <div class="form-group">
+        <label id="lbl-foto1">Fotografía 1 (Ticket Alcotest / Anverso Licencia)</label>
+        <input type="file" id="foto_1" accept="image/*" required>
+      </div>
+      <div class="form-group">
+        <label id="lbl-foto2">Fotografía 2 (Registro Firmado / App Mi Identidad)</label>
+        <input type="file" id="foto_2" accept="image/*" required>
+      </div>
+    </div>
+
+    <button type="submit">Generar Informe Oficial (.DOCX)</button>
+  </form>
+</div>
+
+<script src="app.js"></script>
+</body>
+</html>
